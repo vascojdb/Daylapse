@@ -3,12 +3,12 @@ A Raspberry Pi timelapse creator for very long timelapse projects.
 Based on Jon Bennett's Daylapse project available [here](https://github.com/jondbennett/Daylapse). Kudos for him to put this project up and running!  
 An example timelapse movie from Jon Bennett can be watched [here on YouTube](https://www.youtube.com/watch?v=xY_Os_A_1po).
 
-## Why should I use it?
+## Why should you use it?
 **The scenario:**  
-Imagine this, your friend asks you to make a 1 year timelapse of his/her house being build. You think it is an awesome idea so you agree and go straight to work, but then you find some problems on the way...
+Imagine this: Your friend asks you to make a 1 year timelapse of his/her house being build. You think it is an awesome idea so you agree and go straight to work, but before you can scream with joy you find some problems on the way...
 
 **The problems:**
- - A regular timelapse does not take into consideration the **day and night cycles**, and you do not want a timelapse that becomes stroboscopic when showing 1 year in 1 minute, right?
+ - A regular timelapse does not take into consideration the **day and night cycles** recording both during the day and the night, and you do not want a timelapse that becomes stroboscopic when showing 1 year in 1 minute, right?
  - You do not want to **manually delete all the dark/night frames**, that's out of the question.
  - And even if you do, what will happen during summer and winter? Will your timelapse video be **slower in summer and faster in winter**? *(summer days are longer than winter ones)*, well that does not sound right...  
 
@@ -16,30 +16,33 @@ Imagine this, your friend asks you to make a 1 year timelapse of his/her house b
 The solution is not that complicated, bare with me and keep reading :)
 
 ## How does it work?
-The way Daylapse works is that it takes from you the following information:
+The way Daylapse works is that it takes from you the following critical information:
  - Your location *(latitude and longitude)*
- - The desired number of FPS of your video *(usually 25, 30 or 60)*
- - The duration you want each day to have on the video *(for example 2 or 4 seconds...)*
+ - The desired number of FPS of your timelapse video *(usually 25, 30 or 60fps)*
+ - The duration you want each day to have on the video *(for example 4 seconds)*
 
-Daylapse then calculates the proper number of frames to take during that day, which will be evenly distributed throughout the day, between sunrise and sunset.  
-The time between frames is longer in the summer when days are longer, and the time between frames decreases with the shorter days of winter. 
+Daylapse then calculates the proper number of photos to take during that day, which will be evenly distributed throughout the day, between sunrise and sunset.  
+The time between photos is longer in the summer when days are longer, and it decreases with the shorter days of winter. 
 
-Daylapse needs to be started every day at an early hour *(for example 3:00AM)*, then it will wait until the sunrise so it can start taking photos. After taking all of the photos for a given day the program exits. In order to lean how to setup autostart every day, see the relative section below.
+Daylapse needs to be started every day at an early hour *(for example 3:00AM)*, then it will wait until the sunrise so it can start taking photos.  
+During this time you can optionally use a GPIO to control the camera LED, which in some cameras is connected to an onboard IR-cut filter.  
+After taking all of the photos for a given day the program exits.  
+In order to lean how to setup autostart every day, see the relative section below.
 
-The tool uses `raspistill` to take the frames, so be sure you have a Raspberry Pi camera connected and enabled via `raspi-config`.
-You will need the WiringPi library from [here](http://wiringpi.com/) to control the camera LED, which sometimes is connectd to an IR-cut filter. By using this feature, the LED or IR-Filter stays active from sunrise till sunset.
+The tool uses `raspistill` to take the photos, so be sure you have a Raspberry Pi camera connected and enabled via `raspi-config`.  
+You will need the WiringPi library from [here](http://wiringpi.com/) to control the camera LED, which sometimes is connectd to an IR-cut filter. By using this feature, the LED or IR-Filter stays active from sunrise till sunset. Remember to disable the automatic camera LED control on your Raspberry Pi `/boot/config.txt` file with `disable_camera_led=1`.
 
-*NOTE: You need to have **proper time and timezone set** on the Raspberry Pi, either NTP via internet or external RTC for the sunrise and sunset calculations to work.*
+*NOTE: You need to have **proper time and timezone set** on the Raspberry Pi, either through NTP via internet or via an external RTC for the sunrise and sunset calculations to work.*
 
 ## Installation
-First you will need to update your system and get few dependencies:
+First you will need to update your system and get get and wiringpi:
 ```
 sudo apt update
 sudo apt upgrade
 sudo apt install git wiringpi
 ```
 
-Then clone the repository to your Raspberry Pi under your home directory for example:
+Then clone the repository to your Raspberry Pi (under your home directory for example):
 ```
 cd ~
 git clone https://github.com/vascojdb/Daylapse.git
@@ -49,7 +52,6 @@ Now you can compile the code:
 ```
 cd Daylapse
 make
-# You can use "make clean" to clean the compiled files
 ```
 
 You can now install the application:
@@ -58,8 +60,10 @@ sudo make install
 # You can also uninstall it later using "sudo make uninstall"
 ```
 
+NOTE: You can also clean the compiled files with `make clean` or uninstall the application using `sudo make uninstall`
+
 ## Usage
-After the application is installed you can call it with the `-h` option to show the help:
+After the application is installed you can call it with the `-h` option to see the help:
 ```
 $ daylapse -h
 daylapse: Takes constant day duration pictures for
