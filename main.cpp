@@ -17,18 +17,14 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <limits.h>
+#include <wiringPi.h>
 
-// Uses Paul Schlyter's excellent sunriseset.code
-//
+// Uses Paul Schlyter's excellent sunriseset code:
 #include "sunriset.h"
 #include "snapframes.h"
 
 //#define DEBUG
-
-#define DEFAULT_FPS	                (25.)
-#define DEFAULT_SECONDS_PER_DAY		(2.)
-#define DEFAULT_LATITUDE            (50.08)
-#define DEFAULT_LONGITUDE           (19.80)
 
 /******************************************************/
 /* Converts a broken down time into a calendar time   */
@@ -94,7 +90,7 @@ bool waitUntilSunrise(time_t _sunrise) {
 	}
 	while (sleepSeconds > 0);
 
-	printf("Waiting for sunrise completed at %s",asctime(localtime(&now)));
+	printf("Waiting for sunrise completed at %s", asctime(localtime(&now)));
 	fflush(stdout);
 
 	return true;
@@ -107,7 +103,8 @@ bool waitUntilSunrise(time_t _sunrise) {
 /* throughout the day and then returns                */
 /* If dryrun is true, no photos will be taken         */
 /******************************************************/
-void snapDayFrames(double _fps, double _sday, double _dayLen, bool _dryrun) {
+void snapDayFrames(double _fps, double _sday, double _dayLen,
+                   bool _dryrun, char *_outputdir, char *_raspistill_opt) {
 	// Calculate the number of photos for this day
 	int dayFrames = round(_fps * _sday);
 
@@ -117,10 +114,11 @@ void snapDayFrames(double _fps, double _sday, double _dayLen, bool _dryrun) {
     // Print calculated values
     printf("Photos/day:     %i photos\n", dayFrames);
     printf("Photo interval: %i seconds\n", int(frameDelay));
-	fflush(stdout);
 
 	// And snap the frames
-	snapFrames(dayFrames, frameDelay, _dryrun);
+    printf("=========== Starting captures ==========\n");
+	fflush(stdout);
+	snapFrames(dayFrames, frameDelay, _dryrun, _outputdir, _raspistill_opt);
 }
 
 /******************************************************/
@@ -139,13 +137,16 @@ int main(int argc, char *argv[]) {
     bool skipSunriseCheck = false;
     
     // Default options
-    double lat = DEFAULT_LATITUDE;
-	double lon = DEFAULT_LONGITUDE;
-    double fps = DEFAULT_FPS;
-    double sday = DEFAULT_SECONDS_PER_DAY;
+    double lat = 50.80;
+	double lon = 19.80;
+    double fps = 25.0;
+    double sday = 2.0;
+    char outputdir[PATH_MAX] = "./";
+    char raspistill_opt[MAX_INPUT] = "-n -w 1920 -h 1080 -q 90";
+    int cam_led_gpio = -1;
     
     // Loop through all arguments:
-    while ((opt = getopt(argc, argv, "f:d:s:x:y:DSh")) != -1) {
+    while ((opt = getopt(argc, argv, "f:d:s:y:x:o:O:p:DSh")) != -1) {
         switch (opt) {
             case 'f':
                 fps = strtod(optarg, NULL);
@@ -160,6 +161,15 @@ int main(int argc, char *argv[]) {
             case 'y':
                 lat = strtod(optarg, NULL);
                 break;
+            case 'o':
+                snprintf(outputdir, PATH_MAX-1, "%s", optarg);
+                break;
+            case 'O':
+                snprintf(raspistill_opt, MAX_INPUT-1, "%s", optarg);
+                break;
+            case 'p':
+                cam_led_gpio = int(strtod(optarg, NULL));
+                break;
             case 'h':
                 printf("daylapse: Takes constant day duration pictures for\n");
                 printf("          creating long timelapse videos.\n");
@@ -167,21 +177,38 @@ int main(int argc, char *argv[]) {
                 printf("Usage: daylapse [options]\n");
                 printf("Where options are:\n");
                 printf("  -f <fps>      Desired FPS on the final video\n");
+                printf("                > Default: %.0f\n", fps);
                 printf("  -d/-s <s/day> Day duration in seconds/day in the\n");
                 printf("                video at the desired FPS. Used to\n");
                 printf("                calculate the interval between\n");
                 printf("                pictures taken.\n");
+                printf("                > Default: %.2f\n", sday);
                 printf("  -y <lat>      Your latitude to calculate sunrise\n");
-                printf("                and sunset times\n");
+                printf("                and sunset times.\n");
+                printf("                > Default: %.2f\n", lat);
                 printf("  -x <lon>      Your longitude to calculate sunrise\n");
-                printf("                and sunset times\n");
-                printf("  -D            Dry run, does nothing instead of\n");
-                printf("                taking pictures\n");
+                printf("                and sunset times.\n");
+                printf("                > Default is %.2f\n", lon);
+                printf("  -o <dir>      Directory to save the pictures to.\n");
+                printf("                > Default: current directory\n");
+                printf("  -O \"<opts>\"   Use these options in raspistill.\n");
+                printf("                Do not use -t and -o options here.\n");
+                printf("                > Default: \"%s\"\n", raspistill_opt);
+                printf("  -p <gpio>     GPIO pin number to turn ON the\n");
+                printf("                camera LED or enable IR-cut filter.\n");
+                printf("                Turns ON at sunrise, OFF at sunset.\n");
+                printf("                -GPIO control disabled:    -1\n");
+                printf("                -Raspberry Pi Model A/B:   5\n");
+                printf("                -Raspberry Pi Model B+:    32\n");
+                printf("                -Raspberry Pi Zero/Zero W: 40\n");
+                printf("                GPIO control does not work on Rpi 3\n");
+                printf("                > Default: %i\n", cam_led_gpio);
+                printf("  -D            Dry run, does everything but does\n");
+                printf("                not take any pictures\n");
                 printf("  -S            Skip checking the sunrise time to\n");
                 printf("                start taking pictures immediately\n");
                 printf("  -h            Shows this help\n");
-                printf("If no options are provided. Default will be used:\n");
-                printf("  -f %.0f -s %.2f -y %.2f -x %.2f\n", fps, sday, lat, lon);
+                printf("If no options are provided. Defaults will be used.\n");
                 return 0;
                 break;
             case 'D':
@@ -232,7 +259,14 @@ int main(int argc, char *argv[]) {
     printf("Latitude:       %.2f\n", lat);
     printf("Longitude:      %.2f\n", lon);
     if (dryrun) printf("Dry run:        Enabled\n");
+    if (skipSunriseCheck) printf("Sunrise check:  Disabled (skip)\n");
     fflush(stdout);
+
+    // Initiate GPIO, if in use:
+    if (cam_led_gpio >= 0) {
+        wiringPiSetup();
+        pinMode(cam_led_gpio, OUTPUT);
+    }
 
     // Take action based on the result of sun_rise_set
 	switch (rs) {
@@ -252,8 +286,11 @@ int main(int argc, char *argv[]) {
             }
             else printf("Skipping sunrise check!\n");
 
-            // Take the photos throughout the day and we're done
-            snapDayFrames(fps, sday, daylen, dryrun);
+            // Turn ON the LED GPIO if needed and then take the photos
+            // throughout the day and when we're done, turn OFF the LED GPIO
+            if (cam_led_gpio >= 0) digitalWrite(cam_led_gpio, HIGH);
+            snapDayFrames(fps, sday, daylen, dryrun, outputdir, raspistill_opt);
+            if (cam_led_gpio >= 0) digitalWrite(cam_led_gpio, LOW);
             break;
         
         case +1:

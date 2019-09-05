@@ -8,6 +8,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
@@ -34,7 +35,7 @@ double currentTimeMs() {
 /* raspistill to take the pictures                    */
 /* If dryrun is true, no photos will be taken         */
 /******************************************************/
-void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun) {
+void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char *_outputdir, char *_raspistill_opt) {
 	// Sanity check
 	if(_frameDelay < 0) return;
     if(_frameCount == 0) return;
@@ -60,23 +61,29 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun) {
 		struct tm* gmt = gmtime(&frame_time_int);
 
 		// Create snapshot command
-		sprintf(snapCommand,"raspistill -vf -hf -n -w 1920 -h 1080 -t %d -q 90 -o %04d_%02d_%02d_%02d_%02d_%02d_%03d.jpg",
-				latency,
+		sprintf(snapCommand,"raspistill %s -t %d -o %s/%04d_%02d_%02d_%02d_%02d_%02d_%03d.jpg",
+				_raspistill_opt,
+                latency,
+                _outputdir,
                 gmt->tm_year + 1900,gmt->tm_mon + 1,gmt->tm_mday,
                 gmt->tm_hour,gmt->tm_min,gmt->tm_sec, frame_time_decimal);
 
 		{
 			time_t now = time(0);
             printf("Taking photo %u of %u at %s", (frame+1), _frameCount, asctime(localtime(&now)));
-            //printf("Taking photo %u of %u at %s: %s", frame, _frameCount, asctime(localtime(&now)), snapCommand);
+            printf("Command: %s\n", snapCommand);
 			fflush(stdout);
 		}
 
 		// Execute snapshot command
 		if (_dryrun) printf("Dry run: No photo was taken.\n");
-        else system(snapCommand);
-
-		// Tight sleep / delay
+        else {
+            // Kill any running instance of raspistill that may be running:
+            char snapKillCommand[50];
+            strcpy(snapKillCommand, "killall raspistill >>/dev/null 2>>/dev/null");
+            system(snapKillCommand);
+            system(snapCommand);
+        }
 
 		// Use sleep if we have more than a second to wait
 		int delay;
