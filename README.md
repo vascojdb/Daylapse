@@ -100,7 +100,7 @@ Where options are:
                 start taking pictures immediately
   -h            Shows this help
 If no options are provided. Defaults will be used.
-Photos are saved as: YYYY_MM_DD_HH_MM_SS_mmm
+Photos are saved as: YYYY_MM_DD_HH_MM_SS_mmm.jpg
 Y=Year, M=Month, D=Day, H=Hour, M=Min, S=Sec, m=Milis
 ```
 
