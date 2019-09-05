@@ -19,7 +19,7 @@ LIB = -lwiringPi
 LDFLAGS = -s
 OBJDIR = obj
 DEP = 
-BIN = bin/daylapse
+BIN = daylapse
 
 OUT_BIN = bin/$(BIN)
 OBJ = $(OBJDIR)/main.o $(OBJDIR)/snapframes.o $(OBJDIR)/sunriset.o
