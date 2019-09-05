@@ -71,7 +71,7 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char
 		{
 			time_t now = time(0);
             printf("Taking photo %u of %u at %s", (frame+1), _frameCount, asctime(localtime(&now)));
-            printf("Command: %s\n", snapCommand);
+            //printf("Command: %s\n", snapCommand);
 			fflush(stdout);
 		}
 

@@ -209,6 +209,8 @@ int main(int argc, char *argv[]) {
                 printf("                start taking pictures immediately\n");
                 printf("  -h            Shows this help\n");
                 printf("If no options are provided. Defaults will be used.\n");
+                printf("Photos are saved as: YYYY_MM_DD_HH_MM_SS_mmm\n");
+                printf("Y=Year, M=Month, D=Day, H=Hour, M=Min, S=Sec, m=Milis\n");
                 return 0;
                 break;
             case 'D':
@@ -260,6 +262,9 @@ int main(int argc, char *argv[]) {
     printf("Longitude:      %.2f\n", lon);
     if (dryrun) printf("Dry run:        Enabled\n");
     if (skipSunriseCheck) printf("Sunrise check:  Disabled (skip)\n");
+    printf("Output dir:     %s\n", outputdir);
+    printf("Raspistill opt: %s\n", raspistill_opt);
+    if (cam_led_gpio >= 0) printf("Camera GPIO:    %i\n", cam_led_gpio);
     fflush(stdout);
 
     // Initiate GPIO, if in use:
@@ -288,9 +293,17 @@ int main(int argc, char *argv[]) {
 
             // Turn ON the LED GPIO if needed and then take the photos
             // throughout the day and when we're done, turn OFF the LED GPIO
-            if (cam_led_gpio >= 0) digitalWrite(cam_led_gpio, HIGH);
+            if (cam_led_gpio >= 0) {
+                printf("Turning ON GPIO%i\n", cam_led_gpio);
+                fflush(stdout);
+                digitalWrite(cam_led_gpio, HIGH);
+            }
             snapDayFrames(fps, sday, daylen, dryrun, outputdir, raspistill_opt);
-            if (cam_led_gpio >= 0) digitalWrite(cam_led_gpio, LOW);
+            if (cam_led_gpio >= 0) {
+                printf("Turning OFF GPIO%i\n", cam_led_gpio);
+                fflush(stdout);
+                digitalWrite(cam_led_gpio, LOW);
+            }
             break;
         
         case +1:
