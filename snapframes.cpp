@@ -83,6 +83,8 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char
             strcpy(snapKillCommand, "killall raspistill >>/dev/null 2>>/dev/null");
             system(snapKillCommand);
             system(snapCommand);
+            printf("Photo taken. Waiting for the next one...\n");
+            fflush(stdout);
         }
 
 		// Use sleep if we have more than a second to wait

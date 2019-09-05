@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
 
     // Initiate GPIO, if in use:
     if (cam_led_gpio >= 0) {
-        wiringPiSetup();
+        wiringPiSetupGpio();
         pinMode(cam_led_gpio, OUTPUT);
     }
 
@@ -293,13 +293,13 @@ int main(int argc, char *argv[]) {
 
             // Turn ON the LED GPIO if needed and then take the photos
             // throughout the day and when we're done, turn OFF the LED GPIO
-            if (cam_led_gpio >= 0) {
+            if ((cam_led_gpio >= 0) && !dryrun) {
                 printf("Turning ON GPIO%i\n", cam_led_gpio);
                 fflush(stdout);
                 digitalWrite(cam_led_gpio, HIGH);
             }
             snapDayFrames(fps, sday, daylen, dryrun, outputdir, raspistill_opt);
-            if (cam_led_gpio >= 0) {
+            if ((cam_led_gpio >= 0) && !dryrun) {
                 printf("Turning OFF GPIO%i\n", cam_led_gpio);
                 fflush(stdout);
                 digitalWrite(cam_led_gpio, LOW);
