@@ -19,8 +19,9 @@ LIB = -lwiringPi
 LDFLAGS = -s
 OBJDIR = obj
 DEP = 
-OUT_BIN = bin/daylapse
+BIN = bin/daylapse
 
+OUT_BIN = bin/$(BIN)
 OBJ = $(OBJDIR)/main.o $(OBJDIR)/snapframes.o $(OBJDIR)/sunriset.o
 
 all: release
@@ -50,9 +51,12 @@ clean_release:
 	rm -rf bin
 	rm -rf $(OBJDIR)
 
-install: $(EXES)
+install:
 	[ -d ${INSTALLDIR} ] || install -d ${INSTALLDIR}
 	install -m 755 ${OUT_BIN} ${INSTALLDIR}
+    
+uninstall:
+	rm ${INSTALLDIR}/${BIN}
 
-.PHONY: before_release clean_release install
+.PHONY: before_release clean_release install uninstall
 
