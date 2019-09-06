@@ -148,11 +148,20 @@ $ daylapse -y 50.06 -x 19.94 -D -S
 ```
 
 ## Setting up to run every day
-The normal way to use Daylapse is to **setup a daily cron job** for some very early time in the morning *(like 3:00 AM)* that calls the application with your defined parameters.  
+The best and easiest way to use Daylapse is to **setup a daily cron job** for some very early time in the morning *(like 3:00 AM)* that calls the application with your defined parameters. Here is an example from my instance:  
+Open crontab for the user *pi* using:
+```
+crontab -e
+```
+Add the following line in the end of your crontab file to trigger the job every day at 03:00AM:
+```
+0 3 * * * /usr/local/bin/daylapse -f 30 -d 2 -o /home/pi/daylapse -p 40 -O "-n -ex auto -drc high -w 2592 -h 1944 -q 90" >> /home/pi/daylapse.log 2>&1
+```
 
-(NEEDS UPDATE)
+**NOTE:** The part with `>> /home/pi/daylapse.log 2>&1` is used to keep a log file of the application and it is optional.
 
-It might make sense to connect to the Raspberry Pi and **download the images from time to time** in order to keep the SD card from filling up.
+It might make sense to connect to the Raspberry Pi and **download the images from time to time** in order to keep the SD card from filling up.  
+In my case my pictures had about 3.5MB each *(at native 5MPix)*, with a rate of 60 pictures/day *(30fps * 2s)* a month of pictures will occupy about 6.3GB.
 
 Jon Bennett used the "OpenShot" video editor to make the final timelapse movie. He also used a [Timelapse Deflickering Script](https://github.com/cyberang3l/timelapse-deflicker) to reduce the possability of inducing seizures.
 
