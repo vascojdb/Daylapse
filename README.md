@@ -163,17 +163,28 @@ Add the following line in the end of your crontab file to trigger the job every 
 It might make sense to connect to the Raspberry Pi and **download the images from time to time** in order to keep the SD card from filling up.  
 In my case my pictures had about 3.5MB each *(at native 5MPix)*, with a rate of 60 pictures/day *(30fps * 2s)* a month of pictures will occupy about 6.3GB.
 
-Jon Bennett used the "OpenShot" video editor to make the final timelapse movie. He also used a [Timelapse Deflickering Script](https://github.com/cyberang3l/timelapse-deflicker) to reduce the possability of inducing seizures.
+## Post processing:
+After you have some or all the photos taken, you need to post-process them. To do this the steps are:
+1. **Extract the photos from the Raspberry Pi into a folder on a Linux machine.**  
+   If you do not have one, you may set up a virtual machine using VirtualBox and Debian, Lubuntu, Ubuntu or any other Linux distribution. You can extract the files directly via SD card or remotely via SCP-SSH, WinSCP or any other method.  
+   Lets assume the folder where you place the photos is called `daylapse`.
 
-## Directions:
-(NEEDS UPDATE)
-1.  Create a directory with the name of the year (for my project that was 2016). This is called "the year directory."
-2.  Below the year directory make a directory named "Days". This is where you will place the individual day directories downloaded from the Pi.
-3.  Make another below the year directory named "All_Frames."
-4.  Copy the contents of the "Tools" directory into the year directory.
-5.  Now run the "MakeTimelapse" script. It will run the other scripts.
-  * Link_Frames will create hard links in the "All_Frames" directory.
-  * timelapse-deflicker.pl will do the deflickering
-  * renumberJPG will do the sequential renumbering needed for OpenShot to create the video.
-6.  Use "OpenShot" to create the actual mpeg.
+2. **Place the scripts on the folder.**  
+   Copy the scripts inside `Tools` folder on this repository to the `daylapse` folder, where the photos are located.
 
+3. **Run a deflicker tool to average the brighness of the pictures.**  
+   This will average the picture brightness to make sure there are no hard transitions on the final video. I am using Vangelis [timelapse-deflicker](https://github.com/cyberang3l/timelapse-deflicker/) Perl script.  
+   Run the Perl script as follows, note that this may take some time:
+   ```
+   cd daylapse
+   ./timelapse-deflicker.pl -w 200 -p 2
+   ```
+   
+4. Renumber the photos from their original name to a more fliendly timelapse format (00000.jpg to 99999.jpg) using the script renumberJPG with the folder containing the files to rename as parameter:
+   ```
+   ./renumberJPG Deflickered
+   ```
+
+5. Open the photos on a batch editing software *(for example Adobe [Lighroom](https://lightroom.adobe.com/) or [DarkTable](http://www.darktable.org/))* and edit the pictures as you please.
+
+6. Use a video editor to generate the timelapse *(for example [OpenShot](https://www.openshot.org/), [Adobe Premiere](https://www.adobe.com/products/premiere.html) or any other that will allow creation of timelapse from a photo sequence)*
