@@ -1,7 +1,13 @@
 # Daylapse
-A Raspberry Pi timelapse creator for very long timelapse projects.  
+A Raspberry Pi timelapse creator for very long timelapse projects with the following major features:
+ - Automatically takes pictures from sunrise to sunset
+ - Constant day duration on video (to cover winter and summer days)
+ - Exposure correction (in post processing)
+
 Based on Jon Bennett's Daylapse project available [here](https://github.com/jondbennett/Daylapse). Kudos for him to put this project up and running!  
 An example timelapse movie from Jon Bennett can be watched [here on YouTube](https://www.youtube.com/watch?v=xY_Os_A_1po).
+
+*NOTE: If you are looking for a simple timelapse script that maintains the last N images in a folder, take a look at the last topic of this README.*
 
 ## Why should you use it?
 **The scenario:**  
@@ -173,10 +179,16 @@ After you have some or all the photos taken, you need to post-process them. To d
    Copy the scripts inside `Tools` folder on this repository to the `daylapse` folder, where the photos are located.
 
 3. **Run a deflicker tool to average the brighness of the pictures.**  
-   This will average the picture brightness to make sure there are no hard transitions on the final video. I am using Vangelis [timelapse-deflicker](https://github.com/cyberang3l/timelapse-deflicker/) Perl script.  
-   Run the Perl script as follows, note that this may take some time:
+   This will average the picture brightness to make sure there are no hard transitions on the final video. I am using Vangelis [timelapse-deflicker](https://github.com/cyberang3l/timelapse-deflicker/) Perl script.
+
+   If you are **using the script for the first time**, make sure you have the dependencies installed *(skip if you have done this already)*:
    ```
-   cd daylapse
+   apt-get install libfile-type-perl libterm-progressbar-perl perlmagick libimage-exiftool-perl
+   chmod +x timelapse-deflicker.sh
+   ```
+
+   Run the Perl script as follows from inside the folder with the pictures, note that this may take some time:
+   ```
    ./timelapse-deflicker.pl -w 200 -p 2
    ```
    
@@ -188,3 +200,23 @@ After you have some or all the photos taken, you need to post-process them. To d
 5. Open the photos on a batch editing software *(for example Adobe [Lighroom](https://lightroom.adobe.com/) or [DarkTable](http://www.darktable.org/))* and edit the pictures as you please.
 
 6. Use a video editor to generate the timelapse *(for example [OpenShot](https://www.openshot.org/), [Adobe Premiere](https://www.adobe.com/products/premiere.html) or any other that will allow creation of timelapse from a photo sequence)*
+
+## Other utilities:
+### camlapse
+
+This is a simple shell script that will take pictures with `raspistill` and will store them on a folder defined by the user.  
+The script automatically cleans the older pictures from the same folder, keeping an user specified number of pictures stored on the folder.
+
+The best output folder for this script on the Raspberry Pi is a tmpfs folder *(folder in RAM)* as it avoids unnecesarry write cycles on the SD card.  
+If you have a webserver, you can also set a tmpfs folder under `/var/www/html` so you can access the last X pictures from your browser.  
+For example, this is my entry in `/etc/fstab`:
+```
+tmpfs /var/www/html/img tmpfs defaults,noatime,gid=1000, uid=1000,nodev,noexec,mode=0755, size=50M 0 0
+```
+
+You can copy this file to `/usr/local/bin` and give it 755 permitions, so it can be called straight from the terminal at any place.
+
+You should add this script to crontab so it runs automatically. For example this is my entry in crontab:
+```
+*/10 * * * * /usr/local/bin/camlapse >> /var/log/camlapse.log 2>&1
+```
