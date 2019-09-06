@@ -25,8 +25,47 @@ use Data::Dumper;
 use File::Type;
 use Term::ProgressBar;
 use Image::ExifTool qw(:Public);
+use version;
 
 #use File::Spec;
+
+# Set the version of the timelapse-deflicker script.
+our $VERSION = version->declare("0.1.0");
+
+# Read the version of the imagemagick library that is currently used.
+my ( $_im_version ) = Image::Magick->new->Get('version') =~ /\s+(\d+\.\d+\.\d+-\d+)\s+/;
+my $im_version = version->parse($_im_version =~ s/-/./r);
+
+# Pixel Channel Constants as defined in PixelChannel enum in MagicCore/pixel.h
+use constant {
+    RedPixelChannel => 0,
+    GreenPixelChannel => 1,
+    BluePixelChannel => 2,
+};
+
+# PerlMagick statistics offset constants as defined in PerlMagick/Magick.xs
+# (search for #define ChannelStatistics in the file Magick.xs)
+use constant {
+    statoffset_depth => 0,
+    statoffset_minima => 1,
+    statoffset_maxima => 2,
+    statoffset_mean => 3,
+    statoffset_sd => 4,
+    statoffset_kurtosis => 5,
+    statoffset_skewness => 6,
+    statoffset_entropy => 7,
+};
+
+# On November 9th 2014 (with this http://git.imagemagick.org/repos/ImageMagick/commit/275bdd9d7
+# and this http://git.imagemagick.org/repos/ImageMagick/commit/b44f27d0 git commits)
+# one more value (the entropy) is returned when calling the #image->Statistics() function.
+# Right after this change the first IM 6.9.0-0 version was released (7.0.0-0 hadn't been released
+# yet at that moment). So for versions before 6.9.0-0 we should be using 7 stat fields per
+# channel, while we should be using 8 after that.
+my $imStatsChangedVer = version->parse("6.9.0.0");
+
+my $im_version = version->parse($_im_version =~ s/-/./r);
+my $statFieldsPerColChannel = $im_version >= $imStatsChangedVer ? 8 : 7;
 
 # Global variables
 my $VERBOSE       = 0;
@@ -60,12 +99,17 @@ my $Passes        = 1;
 # d is "debug" (no arguments)
 # w is "rolling window size" (single numeric argument)
 # p is "passes" (single numeric argument)
-my $opt_string = 'hvdw:p:';
+my $opt_string = 'hvdw:p:V';
 getopts( "$opt_string", \my %opt ) or usage() and exit 1;
 
 # print help message if -h is invoked
 if ( $opt{'h'} ) {
   usage();
+  exit 0;
+}
+
+if ( $opt{'V'} ) {
+  print_version();
   exit 0;
 }
 
@@ -77,6 +121,9 @@ $Passes        = $opt{'p'} if defined( $opt{'p'} );
 #This integer test fails on "+n", but that isn't serious here.
 die "The rolling average window for luminance smoothing should be a positive number greater or equal to 2" if ! ($RollingWindow eq int( $RollingWindow ) && $RollingWindow > 1 ) ;
 die "The number of passes should be a positive number greater or equal to 1"                               if ! ($Passes eq int( $Passes ) && $Passes > 0 ) ;
+
+debug("IM Version $_im_version\n");
+debug("Using $statFieldsPerColChannel channel stat fields.\n");
 
 # Create hash to hold luminance values.
 # Format will be: TODO: Add this here
@@ -173,9 +220,9 @@ sub luminance_det {
       # Use the command "identify -verbose <some image file>" in order to see why $R, $G and $B
       # are read from the following index in the statistics array
       # This is the average R, G and B for the whole image.
-      my $R          = @statistics[ ( 0 * 7 ) + 3 ];
-      my $G          = @statistics[ ( 1 * 7 ) + 3 ];
-      my $B          = @statistics[ ( 2 * 7 ) + 3 ];
+      my $R          = @statistics[ ( RedPixelChannel * $statFieldsPerColChannel ) + statoffset_mean ];
+      my $G          = @statistics[ ( GreenPixelChannel * $statFieldsPerColChannel ) + statoffset_mean ];
+      my $B          = @statistics[ ( BluePixelChannel * $statFieldsPerColChannel ) + statoffset_mean ];
 
       # We use the following formula to get the perceived luminance.
       # Set it as the original and target value to start out with.
@@ -254,8 +301,14 @@ sub usage {
   say "       Sometimes 2 passes might give better results.";
   say "       Usually you would not want a number higher than 2.";
   say "-h    Usage";
+  say "-V    Prints the version of this script and IM used.";
   say "-v    Verbose";
   say "-d    Debug";
+}
+
+sub print_version {
+  print "Timelapse-Deflicker v$VERSION\n";
+  print "   used with ImageMagick v$_im_version\n";
 }
 
 sub verbose {
@@ -265,4 +318,3 @@ sub verbose {
 sub debug {
   print $_[0] if ($DEBUG);
 }
-
