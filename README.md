@@ -218,5 +218,5 @@ You can copy this file to `/usr/local/bin` and give it 755 permitions, so it can
 
 You should add this script to crontab so it runs automatically. For example this is my entry in crontab:
 ```
-*/10 * * * * /usr/local/bin/camlapse >> /var/log/camlapse.log 2>&1
+*/10 * * * * /bin/bash -c "/usr/local/bin/camlapse" >> /var/www/html/img/camlapse.txt 2>&1
 ```
