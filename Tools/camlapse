@@ -35,7 +35,7 @@ PICS_DIR="/var/www/html/img"
 MAX_PICS=5
 
 # The raspistill parameters (excluding -o)
-RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20"
+RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50"
 
 TIME_HUM=$(date)
 TIME_NOW=$(date +"%s")
