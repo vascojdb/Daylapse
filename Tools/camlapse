@@ -51,9 +51,9 @@ fi
 echo "Taking picture at $TIME_HUM. Saving it as $TIME_NOW.jpg"
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
 
-TOTAL_PICS=$(ls img/*.jpg | wc -l)
+TOTAL_PICS=$(ls $PICS_DIR/*.jpg | wc -l)
 if [ "$TOTAL_PICS" -gt "$MAX_PICS" ]
 then
-	OLDEST_FILE=$(ls img/*.jpg | head -n1)
+	OLDEST_FILE=$(ls $PICS_DIR/*.jpg | head -n1)
 	rm -rf $OLDEST_FILE
 fi
