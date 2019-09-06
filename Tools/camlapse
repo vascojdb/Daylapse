@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# This is a simple script that will take pictures with raspistill
+# and will store them on the folder PICS_DIR defined below.
+# The script automatically cleans the older pictures from the same
+# folder, keeping MAX_PICS number of pictures stored on the folder.
+#
+# Make sure you only use this folder for the JPG pictures taken
+# or you may lose other files during cleanup.
+#
+# The best output folder for this script on the Raspberry Pi is 
+# a tmpfs folder (folder in RAM) as it avoids write cycles on the
+# SD card.
+# For example, this is my entry in /etc/fstab:
+# tmpfs /var/www/html/img tmpfs defaults,noatime,gid=1000, \
+#                               uid=1000,nodev,noexec,mode=0755, \
+#                               size=50M 0 0
+#
+# If you have a webserver, you can also set a tmpfs folder under
+# /var/www/html so you can access the last X pictures from your
+# browser.
+#
+# You can copy this file to /usr/local/bin and give 755 permitions,
+# so it can be called straight from the terminal at any place.
+#
+# You should add this script to crontab so it runs automatically.
+# For example this is my entry in crontab:
+# */10 * * * * /usr/local/bin/camlapse >> /var/log/camlapse.log 2>&1
+#
+
+# The directory where the pictures will be saved:
+PICS_DIR="/var/www/html/img"
+
+# The maximum number of pictures to keep on the folder:
+MAX_PICS=5
+
+# The raspistill parameters (excluding -o)
+RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20"
+
+TIME_HUM=$(date)
+TIME_NOW=$(date +"%s")
+
+# Check if there is a raspistill already running:
+PID_RASPISTILL=$(pidof raspistill)
+if [ ! -z "$PID_RASPISTILL" ]
+then
+    echo "Raspistill already running. Trying again in 5 seconds"
+    sleep 5
+fi
+
+echo "Taking picture at $TIME_HUM. Saving it as $TIME_NOW.jpg"
+raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
+
+TOTAL_PICS=$(ls img/*.jpg | wc -l)
+if [ "$TOTAL_PICS" -gt "$MAX_PICS" ]
+then
+	OLDEST_FILE=$(ls img/*.jpg | head -n1)
+	rm -rf $OLDEST_FILE
+fi
