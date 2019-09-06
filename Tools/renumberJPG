@@ -1,10 +1,33 @@
 #!/bin/bash
 
+if [ "$#" -ne 1 ]; then
+    echo "ERROR: You need to provide the path to the folder containing the photos to renumber. Exiting."
+    exit 1
+fi
+
+DIR=$1
+CURRDIR=`pwd`
+
+if [ ! -d "$DIR" ]
+then
+    echo "ERROR: Provided directory does not exist. Exiting."
+    exit 1
+fi
+cd $DIR
+
+JPG_COUNT = `ls -1 *.jpg 2>/dev/null | wc -l`
+echo "Number of JPGs found: $JPG_COUNT"
+
 a=0
-for i in *.jpg; do
-  new=$(printf "%05d.jpg" "$a") #04 pad to length of 4
-  echo "renaming " "$i" " to " "$new"
-mv -- "$i" "$new"
-  let a=a+1
+for file in *.jpg
+do
+    # Create the new file name: 000000.jpg - 999999.jpg
+    new=$(printf "%06d.jpg" "$a")
+    echo "Renaming $file to $new"
+    mv -- "$file" "$new"
+    let a=a+1
 done
 
+echo "Task completed. Exiting."
+cd $CURRDIR
+exit 0

@@ -180,7 +180,7 @@ After you have some or all the photos taken, you need to post-process them. To d
    ./timelapse-deflicker.pl -w 200 -p 2
    ```
    
-4. Renumber the photos from their original name to a more fliendly timelapse format (00000.jpg to 99999.jpg) using the script renumberJPG with the folder containing the files to rename as parameter:
+4. Renumber the photos from their original name to a more fliendly timelapse format (000000.jpg to 999999.jpg) using the script renumberJPG with the folder containing the files to rename as parameter:
    ```
    ./renumberJPG Deflickered
    ```
