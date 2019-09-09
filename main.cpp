@@ -102,9 +102,13 @@ bool waitUntilSunrise(time_t _sunrise) {
 /* based of the FPS, seconcds/day and day length      */
 /* throughout the day and then returns                */
 /* If dryrun is true, no photos will be taken         */
+/* Output dir sets the output directory for the photos*/
+/* Raspistill_opt set additional options to raspistill*/
+/* cam_led_gpio is the camera LED pin or -1 (not used)*/
 /******************************************************/
 void snapDayFrames(double _fps, double _sday, double _dayLen,
-                   bool _dryrun, char *_outputdir, char *_raspistill_opt) {
+                   bool _dryrun, char *_outputdir, char *_raspistill_opt,
+                   int _cam_led_gpio) {
 	// Calculate the number of photos for this day
 	int dayFrames = round(_fps * _sday);
 
@@ -118,7 +122,8 @@ void snapDayFrames(double _fps, double _sday, double _dayLen,
 	// And snap the frames
     printf("=========== Starting captures ==========\n");
 	fflush(stdout);
-	snapFrames(dayFrames, frameDelay, _dryrun, _outputdir, _raspistill_opt);
+	snapFrames(dayFrames, frameDelay, _dryrun, _outputdir,
+               _raspistill_opt, _cam_led_gpio);
 }
 
 /******************************************************/
@@ -267,12 +272,6 @@ int main(int argc, char *argv[]) {
     if (cam_led_gpio >= 0) printf("Camera GPIO:    %i\n", cam_led_gpio);
     fflush(stdout);
 
-    // Initiate GPIO, if in use:
-    if (cam_led_gpio >= 0) {
-        wiringPiSetupGpio();
-        pinMode(cam_led_gpio, OUTPUT);
-    }
-
     // Take action based on the result of sun_rise_set
 	switch (rs) {
         case 0:
@@ -291,19 +290,7 @@ int main(int argc, char *argv[]) {
             }
             else printf("Skipping sunrise check!\n");
 
-            // Turn ON the LED GPIO if needed and then take the photos
-            // throughout the day and when we're done, turn OFF the LED GPIO
-            if ((cam_led_gpio >= 0) && !dryrun) {
-                printf("Turning ON GPIO%i\n", cam_led_gpio);
-                fflush(stdout);
-                digitalWrite(cam_led_gpio, HIGH);
-            }
-            snapDayFrames(fps, sday, daylen, dryrun, outputdir, raspistill_opt);
-            if ((cam_led_gpio >= 0) && !dryrun) {
-                printf("Turning OFF GPIO%i\n", cam_led_gpio);
-                fflush(stdout);
-                digitalWrite(cam_led_gpio, LOW);
-            }
+            snapDayFrames(fps, sday, daylen, dryrun, outputdir, raspistill_opt, cam_led_gpio);
             break;
         
         case +1:

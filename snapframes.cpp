@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <sys/time.h>
+#include <wiringPi.h>
 
 /******************************************************/
 /* Returns current time in seconds + fractional second*/
@@ -35,7 +36,9 @@ double currentTimeMs() {
 /* raspistill to take the pictures                    */
 /* If dryrun is true, no photos will be taken         */
 /******************************************************/
-void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char *_outputdir, char *_raspistill_opt) {
+void snapFrames(unsigned int _frameCount, double _frameDelay,
+                bool _dryrun, char *_outputdir, char *_raspistill_opt,
+                int _cam_led_gpio) {
 	// Sanity check
 	if(_frameDelay < 0) return;
     if(_frameCount == 0) return;
@@ -44,6 +47,12 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char
 	double frame_time = currentTimeMs();
 	double next_frame_time = 0.;
 	char snapCommand[PATH_MAX + FILENAME_MAX];
+
+    // Initiate GPIO, if in use:
+    if (_cam_led_gpio >= 0) {
+        wiringPiSetupGpio();
+        pinMode(_cam_led_gpio, OUTPUT);
+    }
 
 	// Main loop
 	for (unsigned int frame = 0; frame < _frameCount; frame++) {
@@ -78,10 +87,14 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char
 		// Execute snapshot command
 		if (_dryrun) printf("Dry run: No photo was taken.\n");
         else {
+            // Force camera LED/IR-cut to be turned ON:
+            digitalWrite(cam_led_gpio, HIGH);
+            
             // Kill any running instance of raspistill that may be running:
             char snapKillCommand[50];
             strcpy(snapKillCommand, "killall raspistill >>/dev/null 2>>/dev/null");
             system(snapKillCommand);
+            // Take the picture:
             system(snapCommand);
             printf("Photo taken. Waiting for the next one...\n");
             fflush(stdout);
@@ -98,4 +111,7 @@ void snapFrames(unsigned int _frameCount, double _frameDelay, bool _dryrun, char
 		while(currentTimeMs() < next_frame_time);
         frame_time = next_frame_time;
 	}
+    
+    // We do not led the LED/IR-cut ON anymore:
+    digitalWrite(cam_led_gpio, LOW);
 }
