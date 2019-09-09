@@ -91,7 +91,7 @@ void snapFrames(unsigned int _frameCount, double _frameDelay,
 		if (_dryrun) printf("Dry run: No photo was taken.\n");
         else {
             // Force camera LED/IR-cut to be turned ON:
-            digitalWrite(cam_led_gpio, HIGH);
+            digitalWrite(_cam_led_gpio, HIGH);
             
             // Kill any running instance of raspistill that may be running:
             char snapKillCommand[50];
@@ -116,5 +116,5 @@ void snapFrames(unsigned int _frameCount, double _frameDelay,
 	}
     
     // We do not led the LED/IR-cut ON anymore:
-    digitalWrite(cam_led_gpio, LOW);
+    digitalWrite(_cam_led_gpio, LOW);
 }
