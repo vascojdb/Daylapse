@@ -35,6 +35,9 @@ double currentTimeMs() {
 /* intervals in between them. This function will call */
 /* raspistill to take the pictures                    */
 /* If dryrun is true, no photos will be taken         */
+/* Output dir sets the output directory for the photos*/
+/* Raspistill_opt set additional options to raspistill*/
+/* cam_led_gpio is the camera LED pin or -1 (not used)*/
 /******************************************************/
 void snapFrames(unsigned int _frameCount, double _frameDelay,
                 bool _dryrun, char *_outputdir, char *_raspistill_opt,
