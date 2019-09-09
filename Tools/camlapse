@@ -5,10 +5,14 @@
 # The script automatically cleans the older pictures from the same
 # folder, keeping MAX_PICS number of pictures stored on the folder.
 #
-# Make sure you only use this folder for the JPG pictures taken
-# or you may lose other files during cleanup.
+# The script will also generate a small GIF animation with the JPEG
+# images it has taken. Also a .log file will be created with every
+# picture with information like temperatures, uptime, etc...
 #
-# The best output folder for this script on the Raspberry Pi is 
+# Make sure you only use this folder for this script, or you may
+# lose other files during cleanup.
+#
+# The best output folder for this script on the Raspberry Pi is
 # a tmpfs folder (folder in RAM) as it avoids write cycles on the
 # SD card.
 # For example, this is my entry in /etc/fstab:
@@ -27,6 +31,9 @@
 # For example this is my entry in crontab:
 # */10 * * * * /bin/bash -c "/usr/local/bin/camlapse" \
 #                           >> /var/www/html/img/camlapse.txt 2>&1
+#
+# Make sure you have installed ImageMagik for the creation of the
+# GIF animation
 #
 
 # The directory where the pictures will be saved:
@@ -52,6 +59,7 @@ fi
 echo "Taking picture and storing statistics at $TIME_HUM"
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
 
+# Fill statistics:
 CPU_TEMP=$(vcgencmd measure_temp | cut -d"=" -f2 | cut -d"'" -f1)
 IN_TEMP="0.00"
 OUT_TEMP="0.00"
@@ -62,6 +70,10 @@ echo "OUT_TEMP=$OUT_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "UPTIME=$UPTIME" >> $PICS_DIR/$TIME_NOW.log
 echo "TIME_NOW=$TIME_NOW" >> $PICS_DIR/$TIME_NOW.log
 
+# Create small GIF animation:
+convert -delay 50 -loop 0 -resize 30% -layers Optimize $PICS_DIR/*.jpg $PICS_DIR/animation.gif
+
+# Remove older pictures:
 TOTAL_PICS=$(ls $PICS_DIR/*.jpg | wc -l)
 if [ "$TOTAL_PICS" -gt "$MAX_PICS" ]
 then
