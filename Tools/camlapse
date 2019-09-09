@@ -33,10 +33,10 @@
 PICS_DIR="/var/www/html/img"
 
 # The maximum number of pictures to keep on the folder:
-MAX_PICS=5
+MAX_PICS=6
 
 # The raspistill parameters (excluding -o)
-RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50"
+RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50 -th 160:120:10"
 
 TIME_HUM=$(date)
 TIME_NOW=$(date +"%s")
@@ -49,12 +49,23 @@ then
     sleep 5
 fi
 
-echo "Taking picture at $TIME_HUM. Saving it as $TIME_NOW.jpg"
+echo "Taking picture and sensors measurement at $TIME_HUM"
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
+
+echo "Saving temperatures as $TIME_NOW.log"
+CPU_TEMP=$(vcgencmd measure_temp | cut -d"=" -f2 | cut -d"'" -f1)
+IN_TEMP="0.00"
+OUT_TEMP="0.00"
+UPTIME=$(awk '{print $1}' /proc/uptime | cut -d'.' -f1)
+echo "CPU_TEMP=$CPU_TEMP" >> $PICS_DIR/$TIME_NOW.log
+echo "IN_TEMP=$IN_TEMP" >> $PICS_DIR/$TIME_NOW.log
+echo "OUT_TEMP=$OUT_TEMP" >> $PICS_DIR/$TIME_NOW.log
+echo "UPTIME=$UPTIME" >> $PICS_DIR/$TIME_NOW.log
+echo "TIME_NOW=$TIME_NOW" >> $PICS_DIR/$TIME_NOW.log
 
 TOTAL_PICS=$(ls $PICS_DIR/*.jpg | wc -l)
 if [ "$TOTAL_PICS" -gt "$MAX_PICS" ]
 then
-	OLDEST_FILE=$(ls $PICS_DIR/*.jpg | head -n1)
-	rm -rf $OLDEST_FILE
+	OLDEST_TIME=$(ls $PICS_DIR/*.jpg | head -n1 | cut -d'.' -f1)
+	rm -rf $OLDEST_TIME.*
 fi
