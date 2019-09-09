@@ -33,7 +33,7 @@
 PICS_DIR="/var/www/html/img"
 
 # The maximum number of pictures to keep on the folder:
-MAX_PICS=6
+MAX_PICS=24
 
 # The raspistill parameters (excluding -o)
 RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50 -th 160:120:10"
