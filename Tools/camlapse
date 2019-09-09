@@ -49,10 +49,9 @@ then
     sleep 5
 fi
 
-echo "Taking picture and sensors measurement at $TIME_HUM"
+echo "Taking picture and storing statistics at $TIME_HUM"
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
 
-echo "Saving temperatures as $TIME_NOW.log"
 CPU_TEMP=$(vcgencmd measure_temp | cut -d"=" -f2 | cut -d"'" -f1)
 IN_TEMP="0.00"
 OUT_TEMP="0.00"
