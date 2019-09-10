@@ -5,7 +5,7 @@
 # The script automatically cleans the older pictures from the same
 # folder, keeping MAX_PICS number of pictures stored on the folder.
 #
-# The script will also generate a small GIF animation with the JPEG
+# The script will also generate a small MP4 animation with the JPEG
 # images it has taken. Also a .log file will be created with every
 # picture with information like temperatures, uptime, etc...
 #
@@ -32,15 +32,15 @@
 # */10 * * * * /bin/bash -c "/usr/local/bin/camlapse" \
 #                           >> /var/www/html/img/camlapse.txt 2>&1
 #
-# Make sure you have installed ImageMagik for the creation of the
-# GIF animation
+# Make sure you have installed ffmpeg for the creation of the
+# MP4 animation
 #
 
 # The directory where the pictures will be saved:
 PICS_DIR="/var/www/html/img"
 
 # The maximum number of pictures to keep on the folder:
-MAX_PICS=24
+MAX_PICS=48
 
 # The raspistill parameters (excluding -o)
 RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50 -th 160:120:10"
@@ -56,7 +56,7 @@ then
     sleep 5
 fi
 
-echo "Taking picture and storing statistics at $TIME_HUM"
+echo "Taking picture, storing statistics and generating timelapse video at $TIME_HUM"
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
 
 # Fill statistics:
@@ -70,8 +70,8 @@ echo "OUT_TEMP=$OUT_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "UPTIME=$UPTIME" >> $PICS_DIR/$TIME_NOW.log
 echo "TIME_NOW=$TIME_NOW" >> $PICS_DIR/$TIME_NOW.log
 
-# Create small GIF animation:
-convert -delay 50 -loop 0 -resize 30% -layers Optimize $PICS_DIR/*.jpg $PICS_DIR/animation.gif
+# Create the MP4 animation:
+ffmpeg -framerate 4 -pattern_type glob -i "$PICS_DIR/*.jpg" -c:v h264_omx -b:v 1200k $PICS_DIR/timelapse.mp4 -hide_banner -loglevel quiet -y
 
 # Remove older pictures:
 TOTAL_PICS=$(ls $PICS_DIR/*.jpg | wc -l)

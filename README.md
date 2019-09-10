@@ -207,6 +207,8 @@ After you have some or all the photos taken, you need to post-process them. To d
 This is a simple shell script that will take pictures with `raspistill` and will store them on a folder defined by the user.  
 The script automatically cleans the older pictures from the same folder, keeping an user specified number of pictures stored on the folder.
 
+The script will also create a timelapse animation in MP4 format of the current pictures of the folder, every time a new picture is taken. Make sure you have `ffmpeg` installed.
+
 The best output folder for this script on the Raspberry Pi is a tmpfs folder *(folder in RAM)* as it avoids unnecesarry write cycles on the SD card.  
 If you have a webserver, you can also set a tmpfs folder under `/var/www/html` so you can access the last X pictures from your browser.  
 For example, this is my entry in `/etc/fstab`:
