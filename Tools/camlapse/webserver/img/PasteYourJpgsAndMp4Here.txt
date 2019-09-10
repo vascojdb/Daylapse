@@ -1,0 +1,1 @@
+Use this folder as storage for your camlapse script (for the images and the mp4 file)
