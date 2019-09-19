@@ -43,7 +43,12 @@ PICS_DIR="/var/www/html/img"
 MAX_PICS=48
 
 # The raspistill parameters (excluding -o)
-RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -a 12 -q 20 -sh 50 -th 160:120:10"
+RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -awb sun -q 20 -sh 50 -th 160:120:10"
+
+# The city to retrieve the weather conditions:
+WEATHER_CITY="Krakow"
+
+# --------- Main code starts here ---------
 
 TIME_HUM=$(date)
 TIME_NOW=$(date +"%s")
@@ -56,19 +61,26 @@ then
     sleep 5
 fi
 
-echo "Taking picture, storing statistics and generating timelapse video at $TIME_HUM"
-raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
+echo "Generating statistics, taking picture and generating timelapse video at $TIME_HUM"
 
 # Fill statistics:
 CPU_TEMP=$(vcgencmd measure_temp | cut -d"=" -f2 | cut -d"'" -f1)
 IN_TEMP="0.00"
-OUT_TEMP=$(cat /sys/bus/w1/devices/28-*/w1_slave | sed -n 's/^.*\(t=[^ ]*\).*/\1/p' | sed 's/t=//' | awk '{x=$1}END{print(x/1000)}')
+OUT_TEMP=$(cat /sys/bus/w1/devices/28-*/w1_slave | sed -n 's/^.*\(t=[^ ]*\).*/\1/p' | sed 's/t=//' | awk '{x=$1}END{printf "%.1f", x/1000}')
 UPTIME=$(awk '{print $1}' /proc/uptime | cut -d'.' -f1)
 echo "CPU_TEMP=$CPU_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "IN_TEMP=$IN_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "OUT_TEMP=$OUT_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "UPTIME=$UPTIME" >> $PICS_DIR/$TIME_NOW.log
 echo "TIME_NOW=$TIME_NOW" >> $PICS_DIR/$TIME_NOW.log
+
+TIME_ANNOTATION=$(date +"%F %H:%M")
+TEMP_ANNOTATION="CPU: T=${CPU_TEMP}'C, Outside: T=${OUT_TEMP}'C"
+HUMIDITY_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%h%22 | tr -d '"')
+WEATHER_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%C%22 | tr -d '"')
+
+# Take the picture here and add annotations:
+raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS -ae 20,0x00,0x8080FF -a "${TIME_ANNOTATION}\n$TEMP_ANNOTATION RH=${HUMIDITY_ANNOTATION} ($WEATHER_ANNOTATION)"
 
 # Create the MP4 animation:
 ffmpeg -framerate 4 -pattern_type glob -i "$PICS_DIR/*.jpg" -c:v h264_omx -b:v 1200k $PICS_DIR/timelapse.mp4 -hide_banner -loglevel quiet -y
