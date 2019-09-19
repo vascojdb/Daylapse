@@ -84,11 +84,13 @@ img {
                 echo "<i class=\"fas fa-thermometer-half a-fw\"></i> <i class=\"fas fa-microchip a-fw\"></i> <b>CPU temperature</b><br>" . $value . "&deg;C";
                 echo "</span>";
             }
+            /*
             if (strcmp($param, 'IN_TEMP') == 0) {
                 echo "<span class=\"blocks\" style=\"font-size: 20px;\">";
                 echo "<i class=\"fas fa-thermometer-half a-fw\"></i> <i class=\"fas fa-box a-fw\"></i> <b>Box temperature</b><br>" . $value . "&deg;C";
                 echo "</span>";
             }
+            */
             if (strcmp($param, 'OUT_TEMP') == 0) {
                 echo "<span class=\"blocks\" style=\"font-size: 20px;\">";
                 echo "<i class=\"fas fa-thermometer-half a-fw\"></i> <i class=\"fas fa-tree a-fw\"></i> <b>Outside temperature</b><br>" . $value . "&deg;C";
@@ -123,7 +125,7 @@ img {
                 else $value = 0;
                 
                 if (strcmp($param, 'CPU_TEMP') == 0) $tooltip = $tooltip . "CPU: " . $value . "&deg;C\r";
-                else if (strcmp($param, 'IN_TEMP') == 0) $tooltip = $tooltip . "Box: " . $value . "&deg;C\r";
+                /*else if (strcmp($param, 'IN_TEMP') == 0) $tooltip = $tooltip . "Box: " . $value . "&deg;C\r";*/
                 else if (strcmp($param, 'OUT_TEMP') == 0) $tooltip = $tooltip . "Outside: " . $value . "&deg;C\r";
             }
             fclose($logfile);

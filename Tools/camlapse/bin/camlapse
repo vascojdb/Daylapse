@@ -62,7 +62,7 @@ raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS
 # Fill statistics:
 CPU_TEMP=$(vcgencmd measure_temp | cut -d"=" -f2 | cut -d"'" -f1)
 IN_TEMP="0.00"
-OUT_TEMP="0.00"
+OUT_TEMP=$(cat /sys/bus/w1/devices/28-*/w1_slave | sed -n 's/^.*\(t=[^ ]*\).*/\1/p' | sed 's/t=//' | awk '{x=$1}END{print(x/1000)}')
 UPTIME=$(awk '{print $1}' /proc/uptime | cut -d'.' -f1)
 echo "CPU_TEMP=$CPU_TEMP" >> $PICS_DIR/$TIME_NOW.log
 echo "IN_TEMP=$IN_TEMP" >> $PICS_DIR/$TIME_NOW.log
