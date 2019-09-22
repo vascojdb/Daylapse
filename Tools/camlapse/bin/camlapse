@@ -80,7 +80,7 @@ HUMIDITY_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%h%22 | t
 WEATHER_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%C%22 | tr -d '"')
 
 # Take the picture here and add annotations:
-raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS -ae 20,0x00,0x8080FF -a "${TIME_ANNOTATION}\n$TEMP_ANNOTATION RH=${HUMIDITY_ANNOTATION} ($WEATHER_ANNOTATION)"
+raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS -ae 20,0x00,0x8080FF -a 1024 -a "${TIME_ANNOTATION}\n$TEMP_ANNOTATION RH=${HUMIDITY_ANNOTATION} ($WEATHER_ANNOTATION)"
 
 # Create the MP4 animation:
 ffmpeg -framerate 4 -pattern_type glob -i "$PICS_DIR/*.jpg" -c:v h264_omx -b:v 1200k $PICS_DIR/timelapse.mp4 -hide_banner -loglevel quiet -y
