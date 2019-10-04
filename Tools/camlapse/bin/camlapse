@@ -40,7 +40,7 @@
 PICS_DIR="/var/www/html/img"
 
 # The maximum number of pictures to keep on the folder:
-MAX_PICS=48
+MAX_PICS=96
 
 # The raspistill parameters (excluding -o)
 RASPISTILL_PARAMS="-w 800 -h 600 -drc high -ex night -awb sun -q 20 -sh 50 -th 160:120:10"
@@ -77,13 +77,21 @@ echo "TIME_NOW=$TIME_NOW" >> $PICS_DIR/$TIME_NOW.log
 TIME_ANNOTATION=$(date +"%F %H:%M")
 TEMP_ANNOTATION="CPU: T=${CPU_TEMP}'C, Outside: T=${OUT_TEMP}'C"
 HUMIDITY_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%h%22 | tr -d '"')
+LEN=$(echo -n $HUMIDITY_ANNOTATION | wc -c)
+if [ "$LEN" -gt 20 ]
+then HUMIDITY_ANNOTATION="-%"
+fi
 WEATHER_ANNOTATION=$(curl -s http://wttr.in/${WEATHER_CITY}?format=%22%C%22 | tr -d '"')
+LEN=$(echo -n $WEATHER_ANNOTATION | wc -c)
+if [ "$LEN" -gt 20 ]
+then WEATHER_ANNOTATION="Unknown"
+fi
 
 # Take the picture here and add annotations:
 raspistill -o $PICS_DIR/$TIME_NOW.jpg $RASPISTILL_PARAMS -ae 20,0x00,0x8080FF -a 1024 -a "${TIME_ANNOTATION}\n$TEMP_ANNOTATION RH=${HUMIDITY_ANNOTATION} ($WEATHER_ANNOTATION)"
 
 # Create the MP4 animation:
-ffmpeg -framerate 4 -pattern_type glob -i "$PICS_DIR/*.jpg" -c:v h264_omx -b:v 1200k $PICS_DIR/timelapse.mp4 -hide_banner -loglevel quiet -y
+ffmpeg -framerate 8 -pattern_type glob -i "$PICS_DIR/*.jpg" -c:v h264_omx -b:v 1200k $PICS_DIR/timelapse.mp4 -hide_banner -loglevel quiet -y
 
 # Remove older pictures:
 TOTAL_PICS=$(ls $PICS_DIR/*.jpg | wc -l)
