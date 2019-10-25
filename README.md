@@ -229,3 +229,9 @@ You should add this script to crontab so it runs automatically. For example this
 ```
 */10 * * * * /bin/bash -c "/usr/local/bin/camlapse" >> /var/www/html/img/camlapse.txt 2>&1
 ```
+
+You can then copy the included files from the webserver into your webserver folder *(for example: /var/www/html/)*:
+
+This will be the result when accessing through the browser:
+![alt text](https://github.com/vascojdb/Daylapse/blob/master/img/camlapse.png "Camlapse webpage")
+
