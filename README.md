@@ -199,7 +199,14 @@ After you have some or all the photos taken, you need to post-process them. To d
 
 5. Open the photos on a batch editing software *(for example Adobe [Lighroom](https://lightroom.adobe.com/) or [DarkTable](http://www.darktable.org/))* and edit the pictures as you please.
 
-6. Use a video editor to generate the timelapse *(for example [OpenShot](https://www.openshot.org/), [Adobe Premiere](https://www.adobe.com/products/premiere.html) or any other that will allow creation of timelapse from a photo sequence)*
+6. Use a video editor to generate the timelapse *(for example [OpenShot](https://www.openshot.org/), [Adobe Premiere](https://www.adobe.com/products/premiere.html) or any other that will allow creation of timelapse from a photo sequence)*  
+
+   If you have Ffmpeg on Linux you can create the video with the following command *(adjust the framerate for your needs, %06d includes all files from 000000 to 999999)*:
+   ```
+   cd Deflickered
+   ffmpeg -framerate 30 -i ./%06d.jpg -c:v libx264 -r 30 daylapse.mp4
+   ```
+
 
 ## Other utilities:
 ### camlapse
